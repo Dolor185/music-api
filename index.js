@@ -84,8 +84,6 @@ app.get("/sounds", async (req, res) => {
       const { data: urlInfo } = await axios(
         `${url}?client_id=iXfdiZL2MeKJsPjeNEdnpG3ewjiBQSby&track_authorization=${track.track_authorization}`
       );
-
-      console.log(acc);
       ac.push({ title: track.title, url: urlInfo.url });
 
       return ac;
@@ -95,6 +93,8 @@ app.get("/sounds", async (req, res) => {
     res.status(400).json(error.message);
   }
 });
+const x = a;
+console.log(x);
 
 app.get("/track", async (req, res) => {
   const { url, track_authorization } = req.query;
