@@ -73,37 +73,38 @@ app.get("/sounds", async (req, res) => {
     const { data } = await axios.get(
       `https://api-v2.soundcloud.com/search?q=${query}&variant_ids=&facet=model&user_id=375405-419824-723463-515208&client_id=ArYppSEotE3YiXCO4Nsgid2LLqJutiww&limit=20&offset=0&linked_partitioning=1&app_version=1696577813&app_locale=en`
     );
-    const tracksData = await data.collection.reduce(async (acc, track) => {
-      const ac = await acc;
+    const tracksData = data.collection.reduce((acc, track) => {
       if (!track.media) {
-        return ac;
+        return acc;
       }
       const { url } = track.media.transcodings.find(
         (el) => el.format?.protocol === "progressive"
       );
-      const { data: urlInfo } = await axios(
-        `${url}?client_id=iXfdiZL2MeKJsPjeNEdnpG3ewjiBQSby&track_authorization=${track.track_authorization}`
-      );
-      ac.push({ title: track.title, url: urlInfo.url });
+      // const { data: urlInfo } = await axios(
+      //   `${url}?client_id=iXfdiZL2MeKJsPjeNEdnpG3ewjiBQSby&track_authorization=${track.track_authorization}`
+      // );
+      acc.push({
+        title: track.title,
+        url,
+        track_authorization: track.track_authorization,
+      });
 
-      return ac;
+      return acc;
     }, []);
     res.status(200).json(tracksData);
   } catch (error) {
     res.status(400).json(error.message);
   }
 });
-const x = a;
-console.log(x);
 
 app.get("/track", async (req, res) => {
   const { url, track_authorization } = req.query;
-  console.log(url, track_authorization);
+
   try {
     const { data } = await axios.get(
       `${url}?client_id=iXfdiZL2MeKJsPjeNEdnpG3ewjiBQSby&track_authorization=${track_authorization}`
     );
-
+    console.log(data);
     res.status(200).json(data);
   } catch (error) {
     res.status(400).json(error.message);
