@@ -71,27 +71,32 @@ app.get("/sounds", async (req, res) => {
   const { query } = req.query;
   try {
     const { data } = await axios.get(
-      `https://api-v2.soundcloud.com/search?q=${query}&variant_ids=&facet=model&user_id=375405-419824-723463-515208&client_id=ArYppSEotE3YiXCO4Nsgid2LLqJutiww&limit=20&offset=0&linked_partitioning=1&app_version=1696577813&app_locale=en`
+      `https://api-v2.soundcloud.com/search?q=${query}&variant_ids=&facet=model&user_id=577302-978855-580161-496268&client_id=dqwdwj3BlsZDKZthzNTXY7sRXIv8eNst&limit=20&offset=0&linked_partitioning=1&app_version=1696577813&app_locale=en`
     );
+
     const tracksData = data.collection.reduce((acc, track) => {
       if (!track.media) {
         return acc;
       }
-      const { url } = track.media.transcodings.find(
+
+      const trackInfo = track.media.transcodings.find(
         (el) => el.format?.protocol === "progressive"
       );
-      // const { data: urlInfo } = await axios(
-      //   `${url}?client_id=iXfdiZL2MeKJsPjeNEdnpG3ewjiBQSby&track_authorization=${track.track_authorization}`
-      // );
+      if (!trackInfo?.url) {
+        return acc;
+      }
+
       acc.push({
+        id: track.id,
         title: track.title,
-        url,
+        url: trackInfo.url,
         track_authorization: track.track_authorization,
       });
 
       return acc;
     }, []);
-    res.status(200).json(tracksData);
+    const next = data.next_href;
+    res.status(200).json({ tracksData, next });
   } catch (error) {
     res.status(400).json(error.message);
   }
@@ -102,10 +107,46 @@ app.get("/track", async (req, res) => {
 
   try {
     const { data } = await axios.get(
-      `${url}?client_id=iXfdiZL2MeKJsPjeNEdnpG3ewjiBQSby&track_authorization=${track_authorization}`
+      `${url}?client_id=dqwdwj3BlsZDKZthzNTXY7sRXIv8eNst&track_authorization=${track_authorization}`
     );
-    console.log(data);
+
     res.status(200).json(data);
+  } catch (error) {
+    res.status(400).json(error.message);
+  }
+});
+
+app.get("/next", async (req, res) => {
+  const { url, offset, q } = req.query;
+  try {
+    const { data } = await axios(
+      `${url}&facet=model&limit=20&variant_ids=&user_id=577302-978855-580161-496268&offset=${offset}&q=${q}&client_id=dqwdwj3BlsZDKZthzNTXY7sRXIv8eNst&app_version=1697190184&app_locale=en`
+    );
+
+    const tracksData = data.collection.reduce((acc, track) => {
+      if (!track.media) {
+        return acc;
+      }
+
+      const trackInfo = track.media.transcodings.find(
+        (el) => el.format?.protocol === "progressive"
+      );
+      if (!trackInfo?.url) {
+        return acc;
+      }
+
+      acc.push({
+        id: track.id,
+        title: track.title,
+        url: trackInfo.url,
+        track_authorization: track.track_authorization,
+      });
+
+      return acc;
+    }, []);
+    const next = data.next_href;
+
+    res.status(200).json({ tracksData, next });
   } catch (error) {
     res.status(400).json(error.message);
   }
